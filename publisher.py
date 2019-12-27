@@ -20,36 +20,20 @@ movavg_coef = 0.95
 
 
 def talker():
-    pub = rospy.Publisher('chatter', String, queue_size=10)
+    pub = rospy.Publisher('nxt_sensor_data', String, queue_size=10)
     rospy.init_node('talker', anonymous=True)
     rate = rospy.Rate(10)
     while not rospy.is_shutdown():
-        hello_str = str(m_left.get_tacho().tacho_count)#"hello world %s" % rospy.get_time()
-        rospy.loginfo(hello_str)
-        pub.publish(hello_str)
+        data = \
+            str(m_left.get_tacho().tacho_count)+" "+\
+            str(m_right.get_tacho().tacho_count)+" "+\
+            str(Ultrasonic(b, PORT_4).get_sample())
+
+        rospy.loginfo(data)
+        pub.publish(data)
         rate.sleep()
 
 
-
-
-
-
-"""
-
-while True:
-    # time loop
-    t = time.time()
-
-    # read data
-    encoder_l = m_left.get_tacho().tacho_count
-    encoder_r = m_right.get_tacho().tacho_count
-
-    ultra_data = Ultrasonic(b, PORT_4).get_sample()
-    prevval = ultra_data * movavg_coef + prev_ultra_data * (1-movavg_coef)
-
-    # time loop  
-    print((time.time()-t) * 1000)
-"""
 if __name__ == '__main__':
     try:
         talker()
