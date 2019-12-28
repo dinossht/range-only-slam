@@ -17,53 +17,51 @@ both = nxt.SynchronizedMotors(m_left, m_right, 0)
 leftboth = nxt.SynchronizedMotors(m_left, m_right, 100)
 rightboth = nxt.SynchronizedMotors(m_right, m_left, 100)
 
-
-prev_ultra_data = 0
-movavg_coef = 0.95
-ch = []
-
-
-def callback(data):
+p = 75
+def send_motor_setpoint(data):
     global both, leftboth, rightboth
-    #rospy.loginfo(rospy.get_caller_id() + "I heard %s", data.data)
     ch = data.data
-    print(ch)
     if ch == "w":
-        print
-        "Forwards"
-        both.turn(100, 360, False)
+        print "Forwards"
+        both.turn(p, 360, False)
     elif ch == "s":
-        print
-        "Backwards"
-        both.turn(-100, 360, False)
+        print "Backwards"
+        both.turn(-p, 360, False)
     elif ch == "a":
-        print
-        "Left"
-        leftboth.turn(100, 90, False)
+        print "Left"
+        leftboth.turn(p, 90, False)
     elif ch == "d":
-        print
-        "Right"
-        rightboth.turn(100, 90, False)
+        print "Right"
+        rightboth.turn(p, 90, False)
+
 
 count = 0
 def talker():
     global count
     pub = rospy.Publisher('nxt_sensor_data', String, queue_size=10)
+    sub = rospy.Subscriber("waypoint", String, send_motor_setpoint, queue_size=1)
     rospy.init_node('talker', anonymous=True)
+    rate = rospy.Rate(5)
 
-    rate = rospy.Rate(10)
+    for i in range(10):
+        rate.sleep()
+    off_l = m_left.get_tacho().tacho_count
+    off_r = m_right.get_tacho().tacho_count
+
 
     while not rospy.is_shutdown():
         count = count + 1
-
+        enc_l = m_left.get_tacho().tacho_count
+        enc_r = m_right.get_tacho().tacho_count
+        ultr = Ultrasonic(b, PORT_4).get_sample()
         data = \
-            str(m_left.get_tacho().tacho_count)+" "+\
-            str(m_right.get_tacho().tacho_count)+" "+\
-            str(Ultrasonic(b, PORT_4).get_sample())
+            str(enc_l-off_l)+" "+\
+            str(enc_r-off_r)+" "+\
+            str(ultr)
 
         rospy.loginfo(data)
-        if count % 10 == 0:
-            sub = rospy.Subscriber("waypoint", String, callback)
+        #if count % 10 == 0:
+        sub = rospy.Subscriber("waypoint", String, send_motor_setpoint)
 
         pub.publish(data)
         rate.sleep()
