@@ -20,7 +20,7 @@ rightboth = nxt.SynchronizedMotors(m_right, m_left, 100)
 
 
 mot_pow = 70
-turnrad = 230/2
+turnrad = 230/3
 off_l = m_left.get_tacho().tacho_count
 off_r = m_right.get_tacho().tacho_count
 
@@ -68,9 +68,9 @@ def callback(data):
     else:
         v = 0
         if abs(tld) > abs(trd):
-            ang = 45 * np.sign(tld - trd) * abs(tld) / abs(trd)
+            ang = 30 * np.sign(tld - trd) #* abs(tld) / abs(trd)
         else:
-            ang = 45 * np.sign(tld-trd)*abs(trd)/abs(tld)
+            ang = 30 * np.sign(tld-trd)#*abs(trd)/abs(tld)
 
     tang = (ang+tang) % 360
 
