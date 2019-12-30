@@ -7,9 +7,21 @@ import rospy
 from std_msgs.msg import String
 import numpy as np
 
+# parameters
+WHEEL_RAD = 21.6  # mm
+WHEEL_DIST = 120  # mm
+SONAR_ARM = 50  # mm
 
-# init brick, see config file ~/.nxt-python
+MOT_POW = 70  # [-128,127]
+TURN_ANG = 45  # degrees
+TURN_RAD = TURN_ANG * 2.8#(WHEEL_DIST / 2) / WHEEL_RAD
+
+FORWARD_DIST = 50  # mm
+FORWARD_ANG = FORWARD_DIST * 360 / (2*np.pi*WHEEL_RAD)
+
+# init brick, see config file ~/.nxt-python to choose between bluetooth and usb
 b = nxt.locator.find_one_brick()
+print("Brick connected")
 
 # initialize motors
 m_left = Motor(b, PORT_B)
@@ -17,74 +29,36 @@ m_right = Motor(b, PORT_C)
 both = nxt.SynchronizedMotors(m_left, m_right, 0)
 leftboth = nxt.SynchronizedMotors(m_left, m_right, 100)
 rightboth = nxt.SynchronizedMotors(m_right, m_left, 100)
+print("Initialized motors")
+
+pub = rospy.Publisher('nxt_sensor_data', String, queue_size=1)
 
 
-mot_pow = 70
-turnrad = 123#230/2
-off_l = m_left.get_tacho().tacho_count
-off_r = m_right.get_tacho().tacho_count
-
-pub = rospy.Publisher('nxt_sensor_data', String, queue_size=10)
-
-prevld = 0
-prevrd = 0
-tang = 0
 def callback(data):
-    global prevld, prevrd, tang
-    # recieve data
+    # recieve waypoint
     ch = data.data
     if ch == "w":
-        print "Forwards"
-        both.turn(mot_pow, 360, False)
+        both.turn(MOT_POW, FORWARD_ANG, True)
     elif ch == "s":
-        print "Backwards"
-        both.turn(-mot_pow, 360, False)
+        both.turn(-MOT_POW, FORWARD_ANG, True)
     elif ch == "a":
-        print "Left"
-        leftboth.turn(mot_pow, turnrad, False)
+        leftboth.turn(MOT_POW, TURN_RAD, True)
     elif ch == "d":
-        print "Right"
-        rightboth.turn(mot_pow, turnrad, False)
+        rightboth.turn(MOT_POW, TURN_RAD, True)
     elif ch == "q":
         both.brake()
 
-
-    # send data
-    enc_l = m_left.get_tacho().tacho_count
-    enc_r = m_right.get_tacho().tacho_count
-    ultr = Ultrasonic(b, PORT_4).get_sample()
-
-    ld = (enc_l - off_l) * 12 / 338
-    rd = (enc_r - off_r) * 12 / 338
-
-    tld = ld - prevld
-    trd = rd - prevrd
-    prevld = ld
-    prevrd = rd
-
-    if abs(tld+trd) >= 20:
-        v = (tld+trd)/2
-        ang = 0
-    else:
-        v = 0
-        if abs(tld) > abs(trd):
-            ang = 45 * np.sign(tld - trd) #* abs(tld) / abs(trd)
-        else:
-            ang = 45 * np.sign(tld-trd)#*abs(trd)/abs(tld)
-
-    tang = (ang+tang) % 360
-
+    # publish sensor raw
     data = \
-        str(v) + " " + \
-        str(tang) + " " + \
-        str(ultr)
+        str(m_left.get_tacho().tacho_count) + " " + \
+        str(m_right.get_tacho().tacho_count) + " " + \
+        str(Ultrasonic(b, PORT_4).get_sample())
     pub.publish(data)
 
 
 def nxt_node():
     rospy.init_node('listener', anonymous=True)
     sub = rospy.Subscriber("waypoint", String, callback, queue_size=1)
-    print("Ready")
     rospy.spin()
 
 
