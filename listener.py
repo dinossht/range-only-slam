@@ -24,7 +24,7 @@ def sonar_tf(raw_data):
         return -1
 
 
-pub = rospy.Publisher('slam_data', String, queue_size=1)
+pub = rospy.Publisher('slam_data', String, queue_size=10)
 def callback(data):
     global offset_calculated, prev_tacho_l, prev_tacho_r, tacho_off_l, tacho_off_r, SCALE
 
@@ -52,13 +52,13 @@ def callback(data):
     # calculate sonar
     sonar = sonar_tf(int(raw[2])) + SONAR_ARM  # cm
 
-    print(dist_u, ang, sonar)
     # publish slam data
     data = \
         str(dist_u) + " " + \
         str(ang) + " " + \
         str(sonar)
     pub.publish(data)
+    print(data)
 
 
 def listener():
