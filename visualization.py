@@ -15,8 +15,8 @@ y_0 = MAP_SIZE / 2
 WIN_SIZE = 50
 
 # states
-xpred = [x_0, y_0, 0, 0, 0]
-Ppred = np.eye(3+2)
+xpred = np.array([x_0, y_0, 0,    0, 0,  0, 0])
+Ppred = np.eye(3+4)
 
 
 """

@@ -13,7 +13,7 @@ def f(x, u):
     x_pred[0] = x[0] + u[0] * np.cos(x_pred[2])  # x pos
     x_pred[1] = x[1] + u[0] * np.sin(x_pred[2])  # y pos
 
-    return x_pred
+    return np.array(x_pred)
 
 
 def Fx(x, u):
@@ -49,7 +49,31 @@ def predict(eta, P, zOdo):
         Ppred[3:l, 0:3] = Ppred[0:3, 3:l].transpose()
 
     # concatenate pose and landmarks again
-    etapred = xpred + m
+    etapred = np.concatenate((xpred, m))
 
     return etapred, Ppred
 
+
+def h(eta, ms):
+    l = len(eta)
+    x = eta[0:3]  # pose
+    m = np.reshape(eta[3:l], (2, ms))  # map (2 x m now)
+
+    """
+           Rot = rotmat2d(-x(3)); % rot from world to body
+            
+            % cartesian measurement in world
+            z_c = m - x(1:2) - Rot' * obj.sensOffset;
+            
+            % in body
+            z_b = Rot*z_c;
+            
+            % polar (use maybe cart2pol)
+            for i=1:size(m,2)
+                zpred(:,i) = [norm(z_c(:,i),2); atan2(z_b(2,i),z_b(1,i))];
+            end
+            %zpred(1:2,:) = cart2pol(z_b(1,:),z_b(2,:));
+            
+            % make column again
+            zpred = zpred(:); 
+    """
