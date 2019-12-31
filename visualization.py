@@ -15,24 +15,11 @@ y_0 = MAP_SIZE / 2
 WIN_SIZE = 50
 
 # states
-xpred = [x_0, y_0, 0]
-Ppred = np.eye(3)
+xpred = [x_0, y_0, 0, 0, 0]
+Ppred = np.eye(3+2)
 
 
 """
-
-s = 500
-map2d = np.zeros((s+1, s+1))
-x_off = s/2W
-y_off = s/2
-mx = x_off
-my = y_off
-
-win = 50
-
-mx = int(mx + round(int(x[0]) * np.sin(np.pi * int(x[1]) / 180)))
-my = int(my - round(int(x[0]) * np.cos(np.pi * int(x[1]) / 180)))
-
 map2d[my][mx] = 150
 sonar = int(x[2])
 if sonar >= 10 and sonar <= 80:
@@ -75,6 +62,8 @@ def callback(data):
 
 
     [xpred, Ppred] = EKFSLAM.predict(xhat, Phat, zOdo)
+    print((xpred))
+    print(Ppred.round())
     plot_map()
 
 def visualization():
