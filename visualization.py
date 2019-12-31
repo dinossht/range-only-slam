@@ -14,12 +14,9 @@ y_0 = MAP_SIZE / 2
 
 WIN_SIZE = 50
 
-
 # states
-#x = x_0
-#y = y_0
-#heading = 0
-
+xpred = [x_0, y_0, 0]
+Ppred = np.eye(3)
 
 
 """
@@ -47,22 +44,17 @@ if sonar >= 10 and sonar <= 80:
 map2d[my][mx] = 0  # 100
 """
 
-
-
-
-def plot_map(dist_u, heading, sonar):
-    global x, y
+def plot_map():
+    global xpred, map2d
     plt.style.use('classic')
-    #x = x + dist_u
-    #map2d[int(round(y))][int(round(x))] = 150
+    x_c = int(round(xpred[0]))
+    y_c = MAP_SIZE - int(round(xpred[1]))
+    map2d[x_c][y_c] = 150
     plt.imshow(map2d, cmap='gray')
-    plt.ylim((x_0 - WIN_SIZE, x_0 + WIN_SIZE))
-    plt.xlim((y_0 - WIN_SIZE, y_0 + WIN_SIZE))
+    plt.ylim((x_c - WIN_SIZE, x_c + WIN_SIZE))
+    plt.xlim((y_c - WIN_SIZE, y_c + WIN_SIZE))
     plt.pause(0.01)
 
-
-xpred = [x_0, y_0, 0]
-Ppred = np.eye(3)
 
 def callback(data):
     global xpred, Ppred, prev_heading, heading
@@ -76,7 +68,6 @@ def callback(data):
     # get measurement data
     sonar = float(raw[2])
 
-    plot_map(dist_u, xpred[2], sonar)
     #if sonar != -1:
 
     xhat = xpred
@@ -84,7 +75,7 @@ def callback(data):
 
 
     [xpred, Ppred] = EKFSLAM.predict(xhat, Phat, zOdo)
-
+    plot_map()
 
 def visualization():
     rospy.init_node('visualization', anonymous=True)
